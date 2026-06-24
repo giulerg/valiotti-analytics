@@ -9,9 +9,9 @@ WITH labels_cte AS  (
 )
 SELECT
     u.Name,
-    l.label_counts
-FROM labels_cte l
-JOIN Users u
+    COALESCE(l.label_counts, 0) AS label_counts
+FROM Users u
+LEFT JOIN labels_cte l
     ON u.ID = l.UserID -- join aggregated results with user information
 ORDER BY l.label_counts DESC;
 
