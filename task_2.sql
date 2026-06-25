@@ -21,13 +21,20 @@ cohort_cte AS (
     SELECT
         COUNT(*) AS user_size
     FROM users_cte
+),month_cte AS (
+    SELECT generate_series(
+        '2023-01-01'::date,
+        '2023-12-01'::date,
+        interval '1 month'
+    ) AS month_start
 )
 -- cumulative ARPU
 SELECT
-       TO_CHAR(month_payment, 'MM-YYYY') AS month_payment,
+       TO_CHAR(month_start, 'MM-YYYY') AS month_payment,
        ROUND(
-              SUM(month_amount) OVER (ORDER BY month_payment)::numeric
+              SUM(COALESCE(month_amount, 0)) OVER (ORDER BY month_payment)::numeric
               / NULLIF(c.user_size, 0),
         2) AS cum_arpu
-FROM grouped_cte
+FROM month_cte m
+LEFT JOIN grouped_cte ON m.month_start = month_payment
 CROSS JOIN cohort_cte c
